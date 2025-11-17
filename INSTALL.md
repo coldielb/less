@@ -1,4 +1,4 @@
-# Installation Instructions
+# DEPRECATED Installation Instructions
 
 ## Quick Install (Recommended)
 
