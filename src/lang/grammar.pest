@@ -1,0 +1,102 @@
+WHITESPACE = _{ " " | "\t" | "\n" | "\r" }
+COMMENT = _{ "--" ~ (!"\n" ~ ANY)* }
+
+program = { SOI ~ expr ~ EOI }
+
+expr = { let_expr | lambda | match_expr | if_expr | binary_expr }
+
+let_expr = { "let" ~ ident ~ "=" ~ expr ~ "in" ~ expr }
+
+lambda = { "\\" ~ param_list ~ "->" ~ expr }
+param_list = { ident ~ ("," ~ ident)* | ident }
+
+match_expr = { "match" ~ expr ~ "with" ~ match_arms }
+match_arms = { match_arm ~ ("|" ~ match_arm)* }
+match_arm = { pattern ~ "->" ~ expr }
+
+pattern = { list_pattern | cons_pattern | ident | number | bool_lit | string_lit | "_" }
+list_pattern = { "[" ~ "]" | "[" ~ pattern ~ ("," ~ pattern)* ~ "]" }
+cons_pattern = { ident ~ "::" ~ pattern }
+
+if_expr = { "if" ~ expr ~ "then" ~ expr ~ "else" ~ expr }
+
+binary_expr = { comp_expr ~ ((pipe_forward | pipe_backward) ~ comp_expr)* }
+
+pipe_forward = { ">>" }
+pipe_backward = { "<<" }
+
+comp_expr = { logic_expr ~ ((eq_op | neq_op | lt_op | gt_op | lte_op | gte_op) ~ logic_expr)* }
+
+eq_op = { "==" }
+neq_op = { "!=" }
+lt_op = { "<" }
+gt_op = { ">" }
+lte_op = { "<=" }
+gte_op = { ">=" }
+
+logic_expr = { cons_expr ~ ((and_op | or_op) ~ cons_expr)* }
+
+and_op = { "&&" }
+or_op = { "||" }
+
+cons_expr = { concat_expr ~ (cons_op ~ concat_expr)* }
+
+cons_op = { "::" }
+
+concat_expr = { add_expr ~ (concat_op ~ add_expr)* }
+
+concat_op = { "++" }
+
+add_expr = { mul_expr ~ ((add_op | sub_op) ~ mul_expr)* }
+
+add_op = { "+" }
+sub_op = { "-" }
+
+mul_expr = { pow_expr ~ ((mul_op | div_op | mod_op) ~ pow_expr)* }
+
+mul_op = { "*" }
+div_op = { "/" }
+mod_op = { "%" }
+
+pow_expr = { unary_expr ~ (pow_op ~ unary_expr)* }
+
+pow_op = { "^" }
+
+unary_expr = { neg_op? ~ app_expr }
+
+neg_op = { "-" }
+
+app_expr = { primary ~ (primary)* }
+
+primary = {
+    "(" ~ expr ~ ")"
+    | list_comp
+    | list
+    | range
+    | number
+    | bool_lit
+    | string_lit
+    | ident
+}
+
+list_comp = { "[" ~ expr ~ "|" ~ ident ~ "<-" ~ expr ~ ("," ~ guard)* ~ "]" }
+guard = { expr }
+
+list = { "[" ~ "]" | "[" ~ expr ~ ("," ~ expr)* ~ "]" }
+
+range = { number ~ ".." ~ number }
+
+number = @{ "-"? ~ ASCII_DIGIT+ }
+
+bool_lit = @{ "true" | "false" }
+
+string_lit = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
+
+ident = @{ !reserved ~ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+
+reserved = {
+    "let" | "in" | "match" | "with" | "if" | "then" | "else"
+    | "true" | "false" | "map" | "filter" | "fold" | "foldl" | "foldr"
+    | "zip" | "take" | "drop" | "reverse" | "sort" | "length"
+    | "head" | "tail" | "sum" | "product" | "concat" | "elem"
+}
